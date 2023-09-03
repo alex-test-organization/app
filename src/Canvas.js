@@ -1,42 +1,56 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import Circle from './Circle';
 
-
 function Canvas() {
-    // Declare a new state variable, which we'll call "count"
-    const [color, setColor] = useState("red");
-    const [size, setSize] = useState(18)
+    const [color, setColor] = useState("white");
+    const [rowSize, setRowSize] = useState(30)
+    const [colSize, setColSize] = useState(30)
 
     const handleColorChange = (e) => {
+        console.log(e.target.value)
         setColor(e.target.value)
     }
-    const handleSizeChange = (ev) => {
-        if(ev.target.value === undefined || ev.target.value === 0) {
+
+    const handleRowSizeChange = (e) => {
+        if (e.target.value === undefined || e.target.value === 0) {
             return
         }
-        setSize(ev.target.value)
+        setRowSize(e.target.value)
     }
-    
-    const gridCanvas = Array(size).fill(Array(size))
 
-    for (let i = 0; i < size; i += 1) {
-        for (let j = 0; j < size; j += 1) {
-            gridCanvas[i][j] = <Circle key={`${i} ${j}`} color={color} />
+    const handleColSizeChange = (e) => {
+        if (e.target.value === undefined || e.target.value === 0) {
+            return
         }
+        setColSize(e.target.value)
     }
+
+    const resetGrid = e => {
+        window.location.reload();
+    }
+
+    let gridCanvas = Array(rowSize * colSize)
+    for (let i = 0; i < rowSize * colSize; i += 1) {
+        gridCanvas[i] = <Circle key={`${i}`} color={color} />
+    }
+
+    useEffect(() => {
+        setColor("#000000")
+    }, []);
+
 
     return (
         <div className="form">
-            <input value={size} onChange={handleSizeChange}/>
-            <select name="color" id="colors" onChange={handleColorChange}>
-                <option value="red">Red</option>
-                <option value="black">Black</option>
-                <option value="green">Green</option>
-                <option value="yellow">Yellow</option>
-            </select>
-
-            <div className="grid" style={{ "gridTemplateColumns": `repeat(${size}, 2fr)` }}>
+            <h2>Perler App</h2>
+            <label>Rows</label>
+            <input label="Rows" value={rowSize} onChange={handleRowSizeChange} />
+            <label>Columns</label>
+            <input value={colSize} onChange={handleColSizeChange} />
+            <label>Color</label>
+            <input type="color" id="colorPicker" onBlur={handleColorChange} />
+            <button onClick={resetGrid}>Reset</button>
+            <div className="grid" style={{ "gridTemplateColumns": `repeat(${rowSize}, 2fr)` }}>
                 {gridCanvas}
             </div>
         </div>
