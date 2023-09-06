@@ -11,14 +11,14 @@ function Circle(props) {
     }
 
     return (
-        <div className="outline">
-            <div style={{ color: props.color }} className="circle"
+        <div className="outline" index={`circle${props.index}`} >
+            <div style={{ color: props.color }} className="circle" index={`circle${props.index}`}
                 onDragOver={(e) => handleColorChange(e, props.callback)}
                 onMouseDown={(e) => handleColorChange(e, props.callback)}
                 onDragEnter={(e) => handleColorChange(e, props.callback)}
             >
             </div>
-        </div>
+        </ div>
     );
 }
 export default Circle;

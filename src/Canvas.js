@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import Box from '@mui/material/Box';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
 
 import Circle from './Circle';
+
+
+const boundary = {
+    inputProps: {
+        max: 50, min: 1
+    }
+}
 
 function Canvas() {
     const [color, setColor] = useState("white");
@@ -49,6 +60,8 @@ function Canvas() {
             return
         }
         setRowSize(e.target.value)
+        setGridHistory([Array(e.target.value * colSize).fill({ color: "white" })])
+        setGridState(Array(e.target.value * colSize).fill({ color: "white" }))
     }
 
     const handleColSizeChange = (e) => {
@@ -56,6 +69,8 @@ function Canvas() {
             return
         }
         setColSize(e.target.value)
+        setGridHistory([Array(rowSize * e.target.value).fill({ color: "white" })])
+        setGridState(Array(rowSize * e.target.value).fill({ color: "white" }))
     }
 
     const resetGrid = e => {
@@ -71,23 +86,26 @@ function Canvas() {
 
     return (
         <div className="form">
-            <h2>Perler App {stepNumber}</h2>
-            <label>Rows</label>
-            <input label="Rows" value={rowSize} onChange={handleRowSizeChange} />
-            <label>Columns</label>
-            <input value={colSize} onChange={handleColSizeChange} />
-            <label>Color</label>
-            <input type="color" id="colorPicker" onChange={handleColorChange} />
-            <button onClick={resetGrid}>Reset</button>
-            <button disabled={stepNumber === 0} onClick={goBack}>Go Back</button>
-            <button disabled={stepNumber === gridHistory.length - 1} onClick={goForward}>Go Foward</button>
+            <Box className="controlPanel" sx={{ '& button': { m: 1 } }}>
+                <Typography variant="h3" gutterBottom>
+                    Perler App: {stepNumber}
+                </Typography>
+                <TextField InputProps={boundary} onChange={handleRowSizeChange} type="number" id="rows" label="Rows" variant="filled" defaultValue={rowSize} />
+                <TextField InputProps={boundary} onChange={handleColSizeChange} type="number" id="cols" label="Columns" variant="filled" defaultValue={colSize} />
+                <input type="color" id="colorPicker" onChange={handleColorChange} />
+                <Button onClick={resetGrid} variant="outlined" color="error" size="small">Reset</Button>
+                <Button disabled={stepNumber === 0} onClick={goBack} variant="outlined" size="small" >{"<"}</Button>
+                <Button disabled={stepNumber === gridHistory.length - 1} onClick={goForward} variant="outlined" size="small">{">"}</Button>
+            </Box>
 
-            <div className="grid" style={{ "gridTemplateColumns": `repeat(${rowSize}, 2fr)` }}>
+            {/* </div> */}
+
+            <div className="grid" style={{ "gridTemplateColumns": `repeat(${colSize}, 2fr)` }}>
                 {gridState.map((val, index) => (
                     <Circle index={index} key={index} color={val.color} callback={updateCanvasState} />
                 ))}
             </div>
-        </div>
+        </div >
     );
 }
 export default Canvas;
