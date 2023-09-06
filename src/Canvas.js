@@ -5,6 +5,7 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 
 import Circle from './Circle';
+import Result from './Result'
 
 
 const boundary = {
@@ -84,6 +85,15 @@ function Canvas() {
         setColor("#000000")
     }, []);
 
+    const resultCounts = gridState.reduce((acc, cur) => {
+        if (acc[cur.color]) {
+            acc[cur.color]++
+        } else {
+            acc[cur.color] = 1
+        }
+        return acc
+    }, {})
+
     return (
         <div className="form">
             <Box className="controlPanel" sx={{ '& button': { m: 1 } }}>
@@ -98,12 +108,15 @@ function Canvas() {
                 <Button disabled={stepNumber === gridHistory.length - 1} onClick={goForward} variant="outlined" size="small">{">"}</Button>
             </Box>
 
-            {/* </div> */}
-
             <div className="grid" style={{ "gridTemplateColumns": `repeat(${colSize}, 2fr)` }}>
                 {gridState.map((val, index) => (
                     <Circle index={index} key={index} color={val.color} callback={updateCanvasState} />
                 ))}
+            </div>
+            <div className="result-container" style={{ "gridTemplateColumns": `repeat(8, 2fr)` }}>
+                {Object.entries(resultCounts).map((element) => {
+                    return (<Result count={element[1]} color={element[0]} />)
+                })}
             </div>
         </div >
     );
