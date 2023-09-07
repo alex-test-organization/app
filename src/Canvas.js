@@ -6,7 +6,8 @@ import Button from '@mui/material/Button';
 
 import Circle from './Circle';
 import Result from './Result'
-
+import SaveDialogForm from './SaveDialogForm';
+import LoadDialogForm from './LoadDialogForm';
 
 const boundary = {
     inputProps: {
@@ -21,6 +22,7 @@ function Canvas() {
     const [stepNumber, setStepNumber] = useState(0)
     const [gridHistory, setGridHistory] = useState([Array(rowSize * colSize).fill({ color: color })]);
     const [gridState, setGridState] = useState(gridHistory[0])
+    const [savedItems, setSavedItems] = useState(Object.keys({ ...localStorage }))
 
     const updateCanvasState = (i) => {
 
@@ -81,6 +83,31 @@ function Canvas() {
         setStepNumber(stepNumber + 1)
     }
 
+    const saveGridInfo = (saveName) => {
+        let grid = JSON.stringify({
+            rows: rowSize,
+            columns: colSize,
+            gridState: gridState
+        })
+        localStorage.setItem(saveName, grid)
+        setSavedItems([...savedItems, saveName])
+    }
+
+    const loadGridInfo = (info) => {
+        let data = localStorage.getItem(info)
+        let values = JSON.parse(data)
+        setStepNumber(0)
+        setRowSize(values.rows)
+        setColSize(values.columns)
+        setGridState(values.gridState)
+        setGridHistory([Array(rowSize * colSize).fill({ color: color })])
+    }
+
+    const deleteCallback = (saveName) => {
+        localStorage.removeItem(saveName)
+        setSavedItems(savedItems.filter(e => e !== saveName))
+    }
+
     useEffect(() => {
         setColor("#000000")
     }, []);
@@ -106,6 +133,8 @@ function Canvas() {
                 <Button onClick={resetGrid} variant="outlined" color="error" size="small">Reset</Button>
                 <Button disabled={stepNumber === 0} onClick={goBack} variant="outlined" size="small" >{"<"}</Button>
                 <Button disabled={stepNumber === gridHistory.length - 1} onClick={goForward} variant="outlined" size="small">{">"}</Button>
+                <SaveDialogForm callback={saveGridInfo} deleteCallback={deleteCallback} loadableItems={savedItems} />
+                <LoadDialogForm callback={loadGridInfo} deleteCallback={deleteCallback} loadableItems={savedItems} />
             </Box>
 
             <div className="grid" style={{ "gridTemplateColumns": `repeat(${colSize}, 2fr)` }}>
@@ -114,8 +143,8 @@ function Canvas() {
                 ))}
             </div>
             <div className="result-container" style={{ "gridTemplateColumns": `repeat(8, 2fr)` }}>
-                {Object.entries(resultCounts).map((element) => {
-                    return (<Result count={element[1]} color={element[0]} />)
+                {Object.entries(resultCounts).map((element, index) => {
+                    return (<Result key={index} count={element[1]} color={element[0]} />)
                 })}
             </div>
         </div >

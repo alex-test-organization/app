@@ -55,6 +55,7 @@
 .result-child {
   flex: 1;
   border-right: solid;
+  margin-bottom: 20px;
 }
 
 .resultCount {
