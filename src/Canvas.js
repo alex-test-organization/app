@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
@@ -23,6 +23,9 @@ function Canvas() {
     const [gridHistory, setGridHistory] = useState([Array(rowSize * colSize).fill({ color: color })]);
     const [gridState, setGridState] = useState(gridHistory[0])
     const [savedItems, setSavedItems] = useState(Object.keys({ ...localStorage }))
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [pixelSize, setPixelSize] = useState(26);
+    const canvasRef = useRef(null)
 
     const updateCanvasState = (i) => {
 
@@ -62,18 +65,27 @@ function Canvas() {
         if (e.target.value === undefined || e.target.value === 0) {
             return
         }
-        setRowSize(e.target.value)
-        setGridHistory([Array(e.target.value * colSize).fill({ color: "white" })])
-        setGridState(Array(e.target.value * colSize).fill({ color: "white" }))
+        resizeRows(e.target.value)
     }
-
+    const resizeRows = useCallback((newRows) => {
+        setRowSize(newRows)
+        setGridHistory([Array(newRows * colSize).fill({ color: "white" })])
+        setGridState(Array(newRows * colSize).fill({ color: "white" }))
+    })
     const handleColSizeChange = (e) => {
         if (e.target.value === undefined || e.target.value === 0) {
             return
         }
-        setColSize(e.target.value)
-        setGridHistory([Array(rowSize * e.target.value).fill({ color: "white" })])
-        setGridState(Array(rowSize * e.target.value).fill({ color: "white" }))
+        resizeColumns(e.target.value)
+    }
+    const resizeColumns = useCallback((newCols) => {
+        setColSize(newCols)
+        setGridHistory([Array(rowSize * newCols).fill({ color: "white" })])
+        setGridState(Array(rowSize * newCols).fill({ color: "white" }))
+    })
+
+    const handlePixelSizeChange = (e) => {
+        setPixelSize(Number(e.target.value))
     }
 
     const resetGrid = e => {
@@ -121,20 +133,84 @@ function Canvas() {
         return acc
     }, {})
 
+    const handleImageUpload = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            setSelectedImage(URL.createObjectURL(file));
+        }
+    };
+
+    useEffect(() => {
+        if (selectedImage) {
+            const canvas = canvasRef.current;
+            const ctx = canvas.getContext('2d');
+            const image = new Image();
+            image.src = selectedImage;
+
+            image.onload = () => {
+                // Set canvas dimensions to match the image size
+                canvas.width = image.width;
+                canvas.height = image.height;
+
+                // Draw the image on the canvas
+                ctx.drawImage(image, 0, 0, image.width, image.height);
+
+                const spacing = pixelSize;
+                const w = image.width;
+                const h = image.height;
+
+                const perlerWidth = Math.ceil(w / spacing)
+                const perlerHeight = Math.ceil(h / spacing)
+
+                resizeRows(perlerHeight)
+                resizeColumns(perlerWidth)
+
+                let newGridState = Array(0)
+                // Pixelate the image
+                for (let y = 0; y < h; y += spacing) {
+                    for (let x = 0; x < w; x += spacing) {
+                        const imageData = ctx.getImageData(x, y, spacing, spacing);
+                        const pixelColor = getDominantColor(imageData.data);
+                        ctx.fillStyle = `rgb(${pixelColor[0]}, ${pixelColor[1]}, ${pixelColor[2]})`;
+                        ctx.fillRect(x, y, spacing, spacing);
+
+                        let hexColor = "#" + componentToHex(pixelColor[0]) + componentToHex(pixelColor[1]) + componentToHex(pixelColor[2]);
+                        newGridState.push({ color: hexColor })
+                    }
+                }
+                setGridState(newGridState)
+            };
+        }
+    }, [pixelSize, resizeColumns, resizeRows, selectedImage]);
+
     return (
         <div className="form">
             <Box className="controlPanel" sx={{ '& button': { m: 1 } }}>
                 <Typography variant="h3" gutterBottom>
                     Perler App: {stepNumber}
                 </Typography>
-                <TextField InputProps={boundary} onChange={handleRowSizeChange} type="number" id="rows" label="Rows" variant="filled" defaultValue={rowSize} />
-                <TextField InputProps={boundary} onChange={handleColSizeChange} type="number" id="cols" label="Columns" variant="filled" defaultValue={colSize} />
+                <TextField InputProps={boundary} onChange={handleRowSizeChange} type="number" id="rows" label="Rows" variant="filled" defaultValue={rowSize} value={rowSize} />
+                <TextField InputProps={boundary} onChange={handleColSizeChange} type="number" id="cols" label="Columns" variant="filled" defaultValue={colSize} value={colSize} />
+                <TextField type="number" id="total" label="Total" variant="filled" value={rowSize * colSize} />
                 <input type="color" id="colorPicker" onChange={handleColorChange} />
                 <Button onClick={resetGrid} variant="outlined" color="error" size="small">Reset</Button>
                 <Button disabled={stepNumber === 0} onClick={goBack} variant="outlined" size="small" >{"<"}</Button>
                 <Button disabled={stepNumber === gridHistory.length - 1} onClick={goForward} variant="outlined" size="small">{">"}</Button>
                 <SaveDialogForm callback={saveGridInfo} deleteCallback={deleteCallback} loadableItems={savedItems} />
                 <LoadDialogForm callback={loadGridInfo} deleteCallback={deleteCallback} loadableItems={savedItems} />
+                <div className="imageUpload">
+                    <Button
+                        component="label"
+                        variant="outlined"
+                    >Upload Image
+                        <input hidden type="file" accept="image/*" onChange={handleImageUpload} />
+                    </Button>
+
+                    <div className="uploadedImage">
+                        {selectedImage && <TextField onBlur={handlePixelSizeChange} type="number" id="pixelSize" label="Pixel Size (Performance Issues)" variant="filled" defaultValue={pixelSize} />}
+                        {selectedImage && <canvas ref={canvasRef} />}
+                    </div>
+                </div>
             </Box>
 
             <div className="grid" style={{ "gridTemplateColumns": `repeat(${colSize}, 2fr)` }}>
@@ -143,11 +219,22 @@ function Canvas() {
                 ))}
             </div>
             <div className="result-container" style={{ "gridTemplateColumns": `repeat(8, 2fr)` }}>
-                {Object.entries(resultCounts).map((element, index) => {
+                {!selectedImage && Object.entries(resultCounts).map((element, index) => {
                     return (<Result key={index} count={element[1]} color={element[0]} />)
                 })}
             </div>
         </div >
     );
+}
+function getDominantColor(pixelData) {
+    const r = pixelData[0];
+    const g = pixelData[1];
+    const b = pixelData[2];
+    return [r, g, b];
+}
+
+function componentToHex(c) {
+    var hex = c.toString(16);
+    return hex.length === 1 ? "0" + hex : hex;
 }
 export default Canvas;
