@@ -218,7 +218,7 @@ function Canvas() {
                 ))}
             </div>
             <div className="result-container" style={{ "gridTemplateColumns": `repeat(8, 2fr)` }}>
-                {!selectedImage && Object.entries(resultCounts).map((element, index) => {
+                {Object.entries(resultCounts).sort(compareResults).map((element, index) => {
                     return (<Result key={index} count={element[1]} color={element[0]} />)
                 })}
             </div>
@@ -235,5 +235,15 @@ function getDominantColor(pixelData) {
 function componentToHex(c) {
     var hex = c.toString(16);
     return hex.length === 1 ? "0" + hex : hex;
+}
+
+function compareResults(a, b) {
+    if (a[1] < b[1]) {
+        return 1
+    } else if (a[1] === b[1]) {
+        return 0
+    } else {
+        return -1
+    }
 }
 export default Canvas;
