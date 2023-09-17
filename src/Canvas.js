@@ -143,7 +143,7 @@ function Canvas() {
     useEffect(() => {
         if (selectedImage) {
             const canvas = canvasRef.current;
-            const ctx = canvas.getContext('2d');
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
             const image = new Image();
             image.src = selectedImage;
 
@@ -189,9 +189,9 @@ function Canvas() {
                 <Typography variant="h3" gutterBottom>
                     Perler App: {stepNumber}
                 </Typography>
-                <TextField InputProps={boundary} onChange={handleRowSizeChange} type="number" id="rows" label="Rows" variant="filled" defaultValue={rowSize} value={rowSize} />
-                <TextField InputProps={boundary} onChange={handleColSizeChange} type="number" id="cols" label="Columns" variant="filled" defaultValue={colSize} value={colSize} />
-                <TextField type="number" id="total" label="Total" variant="filled" value={rowSize * colSize} />
+                <TextField InputProps={boundary} onChange={handleRowSizeChange} type="number" id="rows" label="Rows" variant="filled" value={rowSize} />
+                <TextField InputProps={boundary} onChange={handleColSizeChange} type="number" id="cols" label="Columns" variant="filled" value={colSize} />
+                <TextField disabled id="total" label="Total" variant="filled" value={rowSize * colSize} />
                 <input type="color" id="colorPicker" onChange={handleColorChange} />
                 <Button onClick={resetGrid} variant="outlined" color="error" size="small">Reset</Button>
                 <Button disabled={stepNumber === 0} onClick={goBack} variant="outlined" size="small" >{"<"}</Button>
@@ -205,9 +205,8 @@ function Canvas() {
                     >Upload Image
                         <input hidden type="file" accept="image/*" onChange={handleImageUpload} />
                     </Button>
-
+                    {selectedImage && <TextField onBlur={handlePixelSizeChange} type="number" id="pixelSize" label="Pixel Size (Performance Issues)" variant="filled" defaultValue={pixelSize} />}
                     <div className="uploadedImage">
-                        {selectedImage && <TextField onBlur={handlePixelSizeChange} type="number" id="pixelSize" label="Pixel Size (Performance Issues)" variant="filled" defaultValue={pixelSize} />}
                         {selectedImage && <canvas ref={canvasRef} />}
                     </div>
                 </div>
