@@ -13,9 +13,9 @@ function ImageUpload(props) {
 
     const canvasRef = useRef(null)
     const [selectedImage, setSelectedImage] = useState(null);
-    const [pixelSize, setPixelSize] = useState(13);
+    const [pixelSize, setPixelSize] = useState(26);
     const [crop, setCrop] = useState(undefined);
-    const [aspect, setAspect] = useState(undefined)
+    const [aspect] = useState(16 / 9)
     const [completedCrop, setCompletedCrop] = useState(undefined)
 
     const { resizeRows, resizeColumns, setGridState } = props
@@ -25,7 +25,6 @@ function ImageUpload(props) {
         if (file) {
             setCrop(undefined)
             setSelectedImage(URL.createObjectURL(file));
-            setAspect(16 / 9)
         }
     };
 
@@ -48,7 +47,7 @@ function ImageUpload(props) {
     const onImageLoad = (event) => {
         if (aspect) {
             const { width, height } = event.currentTarget
-            const newCrop = centerAspectCrop(width, height, 16 / 9)
+            const newCrop = centerAspectCrop(width, height, aspect)
             setCrop(newCrop)
             setCompletedCrop(convertToPixelCrop(newCrop, width, height))
         }
@@ -163,8 +162,8 @@ function ImageUpload(props) {
                 {selectedImage && completedCrop && <canvas ref={canvasRef} style={{
                     border: '1px solid black',
                     objectFit: 'contain',
-                    width: completedCrop.width,
-                    height: completedCrop.height,
+                    width: selectedImage.width,
+                    height: selectedImage.height,
                 }} />}
             </div>
         </div>
