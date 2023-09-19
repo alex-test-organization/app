@@ -107,8 +107,8 @@ function ImageUpload(props) {
                     ctx.restore()
 
                     const spacing = pixelSize;
-                    const w = completedCrop.width;
-                    const h = completedCrop.height;
+                    const w = canvas.width;
+                    const h = canvas.height;
 
                     const perlerWidth = Math.ceil(w / spacing)
                     const perlerHeight = Math.ceil(h / spacing)
