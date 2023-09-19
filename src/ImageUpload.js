@@ -13,7 +13,7 @@ function ImageUpload(props) {
 
     const canvasRef = useRef(null)
     const [selectedImage, setSelectedImage] = useState(null);
-    const [pixelSize, setPixelSize] = useState(26);
+    const [pixelSize, setPixelSize] = useState(13);
     const [crop, setCrop] = useState(undefined);
     const [aspect, setAspect] = useState(undefined)
     const [completedCrop, setCompletedCrop] = useState(undefined)
@@ -58,81 +58,85 @@ function ImageUpload(props) {
         setPixelSize(Number(e.target.value))
     }
 
-    useEffect(() => {
-        if (selectedImage && completedCrop) {
-            const canvas = canvasRef.current;
-            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    useDebounceEffect(
+        async () => {
+            if (selectedImage && completedCrop) {
+                const canvas = canvasRef.current;
+                const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
-            const image = new Image();
-            image.src = selectedImage;
+                const image = new Image();
+                image.src = selectedImage;
 
-            const scaleX = image.naturalWidth / image.width
-            const scaleY = image.naturalHeight / image.height
-            const pixelRatio = window.devicePixelRatio
-            canvas.width = Math.floor(completedCrop.width * scaleX * pixelRatio)
-            canvas.height = Math.floor(completedCrop.height * scaleY * pixelRatio)
+                const scaleX = image.naturalWidth / image.width
+                const scaleY = image.naturalHeight / image.height
+                const pixelRatio = window.devicePixelRatio
+                canvas.width = Math.floor(completedCrop.width * scaleX * pixelRatio)
+                canvas.height = Math.floor(completedCrop.height * scaleY * pixelRatio)
 
-            ctx.scale(pixelRatio, pixelRatio)
-            // const rotateRads = rotate * TO_RADIANS
-            const centerX = image.naturalWidth / 2
-            const centerY = image.naturalHeight / 2
+                ctx.scale(pixelRatio, pixelRatio)
+                // const rotateRads = rotate * TO_RADIANS
+                const centerX = image.naturalWidth / 2
+                const centerY = image.naturalHeight / 2
 
-            ctx.save()
-            const cropX = completedCrop.x * scaleX
-            const cropY = completedCrop.y * scaleY
+                ctx.save()
+                const cropX = completedCrop.x * scaleX
+                const cropY = completedCrop.y * scaleY
 
-            // 5) Move the crop origin to the canvas origin (0,0)
-            ctx.translate(-cropX, -cropY)
-            // 4) Move the origin to the center of the original position
-            ctx.translate(centerX, centerY)
-            // 3) Rotate around the origin
-            // 2) Scale the image
-            const scale = 1
-            ctx.scale(scale, scale)
-            // 1) Move the center of the image to the origin (0,0)
-            ctx.translate(-centerX, -centerY)
+                // 5) Move the crop origin to the canvas origin (0,0)
+                ctx.translate(-cropX, -cropY)
+                // 4) Move the origin to the center of the original position
+                ctx.translate(centerX, centerY)
+                // 3) Rotate around the origin
+                // 2) Scale the image
+                const scale = 1
+                ctx.scale(scale, scale)
+                // 1) Move the center of the image to the origin (0,0)
+                ctx.translate(-centerX, -centerY)
 
-            image.onload = () => {
-                ctx.drawImage(
-                    image,
-                    0,
-                    0,
-                    image.naturalWidth,
-                    image.naturalHeight,
-                    0,
-                    0,
-                    image.naturalWidth,
-                    image.naturalHeight,
-                )
-                ctx.restore()
+                image.onload = () => {
+                    ctx.drawImage(
+                        image,
+                        0,
+                        0,
+                        image.naturalWidth,
+                        image.naturalHeight,
+                        0,
+                        0,
+                        image.naturalWidth,
+                        image.naturalHeight,
+                    )
+                    ctx.restore()
 
-                const spacing = pixelSize;
-                const w = completedCrop.width;
-                const h = completedCrop.height;
+                    const spacing = pixelSize;
+                    const w = completedCrop.width;
+                    const h = completedCrop.height;
 
-                const perlerWidth = Math.ceil(w / spacing)
-                const perlerHeight = Math.ceil(h / spacing)
+                    const perlerWidth = Math.ceil(w / spacing)
+                    const perlerHeight = Math.ceil(h / spacing)
 
-                resizeRows(perlerHeight)
-                resizeColumns(perlerWidth)
+                    resizeRows(perlerHeight)
+                    resizeColumns(perlerWidth)
 
-                let newGridState = Array(0)
-                // Pixelate the image
-                for (let y = 0; y < h; y += spacing) {
-                    for (let x = 0; x < w; x += spacing) {
-                        const imageData = ctx.getImageData(x, y, spacing, spacing);
-                        const pixelColor = getDominantColor(imageData.data);
-                        ctx.fillStyle = `rgb(${pixelColor[0]}, ${pixelColor[1]}, ${pixelColor[2]})`;
-                        ctx.fillRect(x, y, spacing, spacing);
+                    let newGridState = Array(0)
+                    // Pixelate the image
+                    for (let y = 0; y < h; y += spacing) {
+                        for (let x = 0; x < w; x += spacing) {
+                            const imageData = ctx.getImageData(x, y, spacing, spacing);
+                            const pixelColor = getDominantColor(imageData.data);
+                            ctx.fillStyle = `rgb(${pixelColor[0]}, ${pixelColor[1]}, ${pixelColor[2]})`;
+                            ctx.fillRect(x, y, spacing, spacing);
 
-                        let hexColor = "#" + componentToHex(pixelColor[0]) + componentToHex(pixelColor[1]) + componentToHex(pixelColor[2]);
-                        newGridState.push({ color: hexColor })
+                            let hexColor = "#" + componentToHex(pixelColor[0]) + componentToHex(pixelColor[1]) + componentToHex(pixelColor[2]);
+                            newGridState.push({ color: hexColor })
+                        }
                     }
-                }
-                setGridState(newGridState)
-            };
-        }
-    }, [completedCrop, pixelSize, resizeColumns, resizeRows, selectedImage, setGridState]);
+                    setGridState(newGridState)
+                };
+            }
+        },
+        250,
+        [completedCrop, pixelSize, resizeColumns, resizeRows, selectedImage, setGridState]
+    )
 
     return (
         <div className="imageUpload">
@@ -177,5 +181,18 @@ function componentToHex(c) {
     var hex = c.toString(16);
     return hex.length === 1 ? "0" + hex : hex;
 }
+
+function useDebounceEffect(fn, waitTime, deps) {
+    useEffect(() => {
+        const t = setTimeout(() => {
+            fn.apply(undefined, deps)
+        }, waitTime)
+
+        return () => {
+            clearTimeout(t)
+        }
+    }, deps)
+}
+
 
 export default ImageUpload
