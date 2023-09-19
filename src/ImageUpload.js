@@ -62,38 +62,37 @@ function ImageUpload(props) {
             if (selectedImage && completedCrop) {
                 const canvas = canvasRef.current;
                 const ctx = canvas.getContext('2d', { willReadFrequently: true });
-
                 const image = new Image();
                 image.src = selectedImage;
 
-                const scaleX = image.naturalWidth / image.width
-                const scaleY = image.naturalHeight / image.height
-                const pixelRatio = window.devicePixelRatio
-                // canvas.width = Math.floor(completedCrop.width * scaleX * pixelRatio)
-                // canvas.height = Math.floor(completedCrop.height * scaleY * pixelRatio)
-                canvas.width = completedCrop.width
-                canvas.height = completedCrop.height
-                ctx.scale(pixelRatio, pixelRatio)
-                // const rotateRads = rotate * TO_RADIANS
-                const centerX = image.naturalWidth / 2
-                const centerY = image.naturalHeight / 2
-
-                ctx.save()
-                const cropX = completedCrop.x * scaleX
-                const cropY = completedCrop.y * scaleY
-
-                // 5) Move the crop origin to the canvas origin (0,0)
-                ctx.translate(-cropX, -cropY)
-                // 4) Move the origin to the center of the original position
-                ctx.translate(centerX, centerY)
-                // 3) Rotate around the origin
-                // 2) Scale the image
-                const scale = 1
-                ctx.scale(scale, scale)
-                // 1) Move the center of the image to the origin (0,0)
-                ctx.translate(-centerX, -centerY)
-
                 image.onload = () => {
+
+                    const scaleX = image.naturalWidth / image.width
+                    const scaleY = image.naturalHeight / image.height
+                    const pixelRatio = window.devicePixelRatio
+                    canvas.width = Math.floor(completedCrop.width * scaleX * pixelRatio)
+                    canvas.height = Math.floor(completedCrop.height * scaleY * pixelRatio)
+                    // canvas.width = completedCrop.width
+                    // canvas.height = completedCrop.height
+                    ctx.scale(pixelRatio, pixelRatio)
+                    // const rotateRads = rotate * TO_RADIANS
+                    const centerX = image.naturalWidth / 2
+                    const centerY = image.naturalHeight / 2
+
+                    ctx.save()
+                    const cropX = completedCrop.x * scaleX
+                    const cropY = completedCrop.y * scaleY
+
+                    // 5) Move the crop origin to the canvas origin (0,0)
+                    ctx.translate(-cropX, -cropY)
+                    // 4) Move the origin to the center of the original position
+                    ctx.translate(centerX, centerY)
+                    // 3) Rotate around the origin
+                    // 2) Scale the image
+                    const scale = 1
+                    ctx.scale(scale, scale)
+                    // 1) Move the center of the image to the origin (0,0)
+                    ctx.translate(-centerX, -centerY)
                     ctx.drawImage(
                         image,
                         0,
