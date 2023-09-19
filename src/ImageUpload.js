@@ -69,9 +69,10 @@ function ImageUpload(props) {
                 const scaleX = image.naturalWidth / image.width
                 const scaleY = image.naturalHeight / image.height
                 const pixelRatio = window.devicePixelRatio
-                canvas.width = Math.floor(completedCrop.width * scaleX * pixelRatio)
-                canvas.height = Math.floor(completedCrop.height * scaleY * pixelRatio)
-
+                // canvas.width = Math.floor(completedCrop.width * scaleX * pixelRatio)
+                // canvas.height = Math.floor(completedCrop.height * scaleY * pixelRatio)
+                canvas.width = completedCrop.width
+                canvas.height = completedCrop.height
                 ctx.scale(pixelRatio, pixelRatio)
                 // const rotateRads = rotate * TO_RADIANS
                 const centerX = image.naturalWidth / 2
