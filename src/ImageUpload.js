@@ -116,7 +116,7 @@ function ImageUpload(props) {
             {selectedImage && <TextField onBlur={handlePixelSizeChange} type="number" id="pixelSize" label="Pixel Size (Performance Issues)" variant="filled" defaultValue={pixelSize} />}
             <div className="uploadedImage">
                 <div>
-                    {!!sourceUrl && <a href={sourceUrl}>Link to Source</a>}
+                    {!!sourceUrl && <div>Source: <a href={sourceUrl}>{sourceUrl}</a></div>}
                 </div>
                 {selectedImage && <canvas ref={canvasRef} />}
             </div>
