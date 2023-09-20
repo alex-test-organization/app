@@ -7,6 +7,8 @@ function ImageUpload(props) {
     const [selectedImage, setSelectedImage] = useState(null);
     const [pixelSize, setPixelSize] = useState(26);
     const canvasRef = useRef(null)
+    const [sourceUrl, setSourceUrl] = useState(null)
+    const [scale, setScale] = useState(0.5)
 
     const { resizeRows, resizeColumns, setGridState } = props
 
@@ -14,21 +16,53 @@ function ImageUpload(props) {
         setPixelSize(Number(e.target.value))
     }
 
+    const handleScaleChange = (e) => {
+        setScale(Number(e.target.value))
+    }
+
     const handleImageUpload = (event) => {
         const file = event.target.files[0];
         if (file) {
             setSelectedImage(URL.createObjectURL(file));
+            setSourceUrl(null)
         }
     };
+
+    const handleImageFetch = () => {
+        let url = `https://api.waifu.im/search?${new Date().getTime()}`
+        const params = {
+        };
+        const queryParams = new URLSearchParams(params);
+        const requestUrl = `${url}?${queryParams}`;
+        fetch(requestUrl)
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Request failed with status code: ' + response.status);
+                }
+            })
+            .then(data => {
+                setSourceUrl(data.images[0].source)
+                setSelectedImage(data.images[0].url)
+            })
+            .catch(error => {
+                console.error('An error occurred:', error.message);
+            });
+    }
 
     useEffect(() => {
         if (selectedImage) {
             const canvas = canvasRef.current;
             const ctx = canvas.getContext('2d', { willReadFrequently: true });
             const image = new Image();
+            image.setAttribute('crossOrigin', '');
             image.src = selectedImage;
 
             image.onload = () => {
+                image.width *= scale
+                image.height *= scale
+
                 // Set canvas dimensions to match the image size
                 canvas.width = image.width;
                 canvas.height = image.height;
@@ -62,7 +96,7 @@ function ImageUpload(props) {
                 setGridState(newGridState)
             };
         }
-    }, [pixelSize, resizeColumns, resizeRows, selectedImage, setGridState]);
+    }, [pixelSize, resizeColumns, resizeRows, selectedImage, setGridState, scale]);
 
     return (
         <div className="imageUpload">
@@ -72,12 +106,21 @@ function ImageUpload(props) {
             >Upload Image
                 <input hidden type="file" accept="image/*" onChange={handleImageUpload} />
             </Button>
+            <Button
+                component="label"
+                variant="outlined"
+                onClick={handleImageFetch}
+            >Waifu Button
+            </Button>
+            {selectedImage && <TextField onChange={handleScaleChange} type="number" value={scale} inputProps={{ min: 0.1, max: 1, step: "0.1" }} label="Scaling" variant="filled" />}
             {selectedImage && <TextField onBlur={handlePixelSizeChange} type="number" id="pixelSize" label="Pixel Size (Performance Issues)" variant="filled" defaultValue={pixelSize} />}
             <div className="uploadedImage">
+                <div>
+                    {!!sourceUrl && <a href={sourceUrl}>Link to Source</a>}
+                </div>
                 {selectedImage && <canvas ref={canvasRef} />}
             </div>
         </div>
-
     );
 }
 function getDominantColor(pixelData) {
