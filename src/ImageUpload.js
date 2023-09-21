@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
-
+import CircularProgress from '@mui/material/CircularProgress';
 
 function ImageUpload(props) {
     const [selectedImage, setSelectedImage] = useState(null);
@@ -9,6 +10,7 @@ function ImageUpload(props) {
     const canvasRef = useRef(null)
     const [sourceUrl, setSourceUrl] = useState(null)
     const [scale, setScale] = useState(0.5)
+    const [isImageLoading, setIsImageLoading] = useState(false)
 
     const { resizeRows, resizeColumns, setGridState } = props
 
@@ -30,10 +32,10 @@ function ImageUpload(props) {
 
     const handleImageFetch = () => {
         let url = `https://api.waifu.im/search?${new Date().getTime()}`
-        const params = {
-        };
+        const params = {};
         const queryParams = new URLSearchParams(params);
         const requestUrl = `${url}?${queryParams}`;
+        setIsImageLoading(true)
         fetch(requestUrl)
             .then(response => {
                 if (response.ok) {
@@ -47,6 +49,7 @@ function ImageUpload(props) {
                 setSelectedImage(data.images[0].url)
             })
             .catch(error => {
+                setIsImageLoading(false)
                 console.error('An error occurred:', error.message);
             });
     }
@@ -60,6 +63,7 @@ function ImageUpload(props) {
             image.src = selectedImage;
 
             image.onload = () => {
+                setIsImageLoading(false)
                 image.width *= scale
                 image.height *= scale
 
@@ -99,28 +103,28 @@ function ImageUpload(props) {
     }, [pixelSize, resizeColumns, resizeRows, selectedImage, setGridState, scale]);
 
     return (
-        <div className="imageUpload">
+        <Box className="imageUpload" sx={{ '& button': { m: 1 } }}>
             <Button
-                component="label"
                 variant="outlined"
             >Upload Image
                 <input hidden type="file" accept="image/*" onChange={handleImageUpload} />
             </Button>
             <Button
-                component="label"
                 variant="outlined"
+                disabled={isImageLoading}
                 onClick={handleImageFetch}
-            >Waifu Button
+            >{isImageLoading ? "Loading..." : "Waifu Button"}
             </Button>
             {selectedImage && <TextField onChange={handleScaleChange} type="number" value={scale} inputProps={{ min: 0.1, max: 1, step: "0.1" }} label="Scaling" variant="filled" />}
             {selectedImage && <TextField onBlur={handlePixelSizeChange} type="number" id="pixelSize" label="Pixel Size (Performance Issues)" variant="filled" defaultValue={pixelSize} />}
             <div className="uploadedImage">
                 <div>
                     {!!sourceUrl && <div>Source: <a href={sourceUrl}>{sourceUrl}</a></div>}
+                    {isImageLoading && <CircularProgress />}
                 </div>
                 {selectedImage && <canvas ref={canvasRef} />}
             </div>
-        </div>
+        </Box>
     );
 }
 function getDominantColor(pixelData) {
