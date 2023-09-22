@@ -80,5 +80,6 @@
 }
 
 .circle:hover {
+  cursor: crosshair;
   opacity: 0.4;
 }
