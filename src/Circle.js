@@ -5,16 +5,21 @@ function Circle(props) {
 
     const [, setColor] = useState(props.color)
 
-    const handleColorChange = (e, callback) => {
-        let newColor = callback(props.index)
+    const handleColorChangeOnEnter = (e) => {
+        if (e.buttons === 1) {
+            handleColorChangeClick(e)
+        }
+    }
+
+    const handleColorChangeClick = (e) => {
+        let newColor = props.callback(props.index)
         setColor(newColor);
     }
 
     return (
         <div style={{ color: props.color }} className="circle" index={`circle${props.index}`}
-            onDragOver={(e) => handleColorChange(e, props.callback)}
-            onMouseDown={(e) => handleColorChange(e, props.callback)}
-            onDragEnter={(e) => handleColorChange(e, props.callback)}
+            onPointerDown={handleColorChangeClick}
+            onPointerEnter={handleColorChangeOnEnter}
         >
         </div>
     );
