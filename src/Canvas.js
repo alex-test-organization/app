@@ -25,7 +25,10 @@ function Canvas() {
     const [gridState, setGridState] = useState(gridHistory[0])
     const [savedItems, setSavedItems] = useState(Object.keys({ ...localStorage }))
 
-    const updateCanvasState = (i) => {
+    const updateCanvasState = (i, currentColor) => {
+        if (currentColor === color) {
+            return currentColor
+        }
 
         setStepNumber(stepNumber + 1)
         let copy = [...gridState]

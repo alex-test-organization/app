@@ -12,12 +12,15 @@ function Circle(props) {
     }
 
     const handleColorChangeClick = (e) => {
-        let newColor = props.callback(props.index)
+        let newColor = props.callback(props.index, props.color)
         setColor(newColor);
     }
 
     return (
-        <div style={{ color: props.color }} className="circle" index={`circle${props.index}`}
+        <div
+            style={{ color: props.color }}
+            className="circle not-selectable" // prevents text dragging events
+            index={`circle${props.index}`}
             onPointerDown={handleColorChangeClick}
             onPointerEnter={handleColorChangeOnEnter}
         >
