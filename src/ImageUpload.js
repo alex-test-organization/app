@@ -3,6 +3,7 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import CircularProgress from '@mui/material/CircularProgress';
+import yuiLogo from "./yui.gif"
 
 function ImageUpload(props) {
     const [selectedImage, setSelectedImage] = useState(null);
@@ -11,6 +12,8 @@ function ImageUpload(props) {
     const [sourceUrl, setSourceUrl] = useState(null)
     const [scale, setScale] = useState(0.5)
     const [isImageLoading, setIsImageLoading] = useState(false)
+    const [waifuButtonText, setWaifuButtonText] = useState("Waifu Button")
+    const [didImageFailToLoad, setDidImageFailToLoad] = useState(false)
 
     const { resizeRows, resizeColumns, setGridState } = props
 
@@ -50,6 +53,7 @@ function ImageUpload(props) {
             })
             .catch(error => {
                 setIsImageLoading(false)
+                setDidImageFailToLoad(true)
                 console.error('An error occurred:', error.message);
             });
     }
@@ -63,6 +67,8 @@ function ImageUpload(props) {
             image.src = selectedImage;
 
             image.onload = () => {
+                setWaifuButtonText("Waifu Button")
+                setDidImageFailToLoad(false)
                 setIsImageLoading(false)
                 image.width *= scale
                 image.height *= scale
@@ -99,6 +105,11 @@ function ImageUpload(props) {
                 }
                 setGridState(newGridState)
             };
+            image.onerror = () => {
+                setWaifuButtonText("Try Another image")
+                setIsImageLoading(false)
+                setDidImageFailToLoad(true)
+            }
         }
     }, [pixelSize, resizeColumns, resizeRows, selectedImage, setGridState, scale]);
 
@@ -110,10 +121,11 @@ function ImageUpload(props) {
                 <input hidden type="file" accept="image/*" onChange={handleImageUpload} />
             </Button>
             <Button
+                color={didImageFailToLoad ? "error" : "success"}
                 variant="outlined"
                 disabled={isImageLoading}
                 onClick={handleImageFetch}
-            >{isImageLoading ? "Loading..." : "Waifu Button"}
+            >{isImageLoading ? "Loading..." : waifuButtonText}
             </Button>
             {selectedImage && <TextField onChange={handleScaleChange} type="number" value={scale} inputProps={{ min: 0.1, max: 1, step: "0.1" }} label="Scaling" variant="filled" />}
             {selectedImage && <TextField onBlur={handlePixelSizeChange} type="number" id="pixelSize" label="Pixel Size (Performance Issues)" variant="filled" defaultValue={pixelSize} />}
@@ -122,6 +134,10 @@ function ImageUpload(props) {
                     {!!sourceUrl && <div>Source: <a href={sourceUrl}>{sourceUrl}</a></div>}
                     {isImageLoading && <CircularProgress />}
                 </div>
+                {didImageFailToLoad && <div className="errorScreen">
+                    <div>Could not Load image</div>
+                    <img src={yuiLogo} alt="" />
+                </div>}
                 {selectedImage && <canvas ref={canvasRef} />}
             </div>
         </Box>
