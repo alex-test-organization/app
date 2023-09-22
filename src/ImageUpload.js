@@ -117,6 +117,7 @@ function ImageUpload(props) {
         <Box className="imageUpload" sx={{ '& button': { m: 1 } }}>
             <Button
                 variant="outlined"
+                component="label"
             >Upload Image
                 <input hidden type="file" accept="image/*" onChange={handleImageUpload} />
             </Button>
