@@ -79,6 +79,6 @@
   justify-items: center;
 }
 
-.outline {
-  /* border: 1px solid black; */
+.circle:hover {
+  opacity: 0.4;
 }
